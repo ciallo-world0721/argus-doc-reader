@@ -1,46 +1,49 @@
 ---
 name: argus-doc-reader
-description: 本地 GPU 深度文档精读（PP-StructureV3，Argus 百眼巨人）。把 PDF/扫描件解析为 Markdown + 逐块 JSON + 完整切割的图表图片，图文标题自动配对。仅当用户明确要求"精读文档中的图表"、"把 PDF 里的图都读清楚"、"图表必须看懂/不能漏"等图表级理解需求时使用；普通 PDF 阅读、摘要、问答等任务不要使用本 skill，直接走默认 PDF 阅读路径（云端更快）。触发关键词示例：精读图表、图表提取、读懂每张图、figure/chart 都要看、扫描版图表识别。
+description: 本地部署百度 PP-StructureV3 文档解析产线（GPU 加速），把 PDF/扫描件精读为 Markdown + 逐块 JSON + 完整切割的图表图片，图题自动配对，并以切割原图交叉校验 OCR 文本。仅当用户明确要求精读文档图表时使用，例如"把 PDF 里的图都读清楚"、"图表必须看懂/不能漏"、"精读这份文献的 figure"、扫描版图表识别、图表提取。普通 PDF 阅读、摘要、翻译、问答不要使用本 skill，走默认 PDF 阅读路径（云端更快）。也适用于从零安装部署该环境的请求。
 ---
 
-# Argus Doc Reader — 图表级 PDF 精读
+# Argus Doc Reader — 图表级 PDF 精读（路由器）
 
-本机已部署 PP-StructureV3（百度飞桨文档解析产线），GPU 加速。输出：合并 Markdown、每页原始 JSON（含每块 label/content/bbox/阅读顺序）、切割出的图表原图（`imgs/`）。
+本文件只做路由。不要凭记忆执行安装或解析，按下面的协议从磁盘加载对应内容。
 
-## 环境（已就绪，勿重复安装）
+## 路由协议
 
-- Python 环境：`D:\PaddleOCR\venv\Scripts\python.exe`（paddlepaddle-gpu 3.3.1 cu126 + paddleocr 3.7.0）
-- 模型缓存：`D:\PaddleOCR\models`（已下载，首次调用无需再下载）
-- 显卡：RTX 4070 Laptop 8GB，推理走 CUDA；若 GPU 异常可加 `--cpu` 兜底
+### 1. 加载核心层
 
-## 工作流
+读取 [manifest.yaml](manifest.yaml)，以及其中 `always_load` 列出的两个文件：
 
-1. 若 PDF 不在当前工作区，先复制进来。
-2. 运行（脚本副本在 `scripts/pdf_parse.py`，主副本在 `D:\PaddleOCR\pdf_parse.py`，两者一致）：
+- `static/core/contract.md` — 交付物契约与 OCR 判读纪律（每次任务都必须遵守）
+- `static/core/workflow.md` — 解析执行流程（与环境无关的通用步骤）
 
-   ```
-   D:\PaddleOCR\venv\Scripts\python.exe D:\PaddleOCR\pdf_parse.py <输入.pdf> [-o 输出目录] [--pages 1-5] [--cpu] [--chart]
-   ```
+### 2. 解析环境轴（阻塞门）
 
-   - 超过 30 页的文档先 `--pages` 试几页确认效果，再全量跑（GPU 上约 5~10 秒/页）。
-   - `--chart` 启用图表转数据表（PP-Chart2Table），仅在用户要求"读出图中数据"时加，会更慢。
-3. 依次读取输出：`<名字>.md`（全文，图已在原位引用）→ `all_blocks.json` 或 `pages/page_*/`*`_res.json`（结构化块）→ `imgs/` 中每张切割图用 ReadMediaFile 逐张查看。
+运行环境探测脚本，确定 `env` 轴取值：
 
-## 必须遵守的判读纪律
+```
+python scripts/detect_env.py
+```
 
-OCR 结果是**可能出错的中间产物**，切割图才是事实来源：
+- 若目标环境已有独立 venv，用该 venv 的 python 运行；否则用任意可用 python。
+- 脚本输出 JSON，`route` 字段即为轴取值：`not_installed` / `nvidia_16gb_plus` / `nvidia_8gb` / `cpu_only`。
+- 按 `manifest.yaml` 的 `axes.env.values` 映射，读取对应的 `fragments/env/*.md`，只读这一个 fragment。
+- `detect_env.py` 不可用或结果存疑时，手动确认（GPU 型号/显存、paddle 是否已装）后再选 fragment，不要瞎猜。
 
-- 图题、正文、公式中出现乱码式错字（如 "Figure.utciooflym…"）时，不要照读，打开对应切割图或页面区域核实后再陈述。
-- 引用图表结论前，必须实际查看该图的切割图片；图中坐标轴/图例文字 OCR 噪声大，以图为准。
-- 发现 `figure_title` 存在但同页无对应切割图，说明示意图/线条图被版面检测漏检——主动向用户指出该图未被切割，必要时用 PDF 渲染截图手动补切。
-- 交付时区分两类内容：高置信文本（正文）与需标注"经原图核对"的内容（图题、图中数据、公式）。
+### 3. 按加载的材料执行
 
-## 已知局限（实测确认）
+- `not_installed`：先按 fragment 完成安装与验证，再进入解析流程。
+- 其余：直接按 `static/core/workflow.md` 执行解析，fragment 里是该硬件档位的模型/参数/速度预期。
 
-- 统计图表（折线/柱状/散点）切割可靠；纯线条示意图可能漏检。
-- PDF 内嵌文字层不被利用，整页按位图 OCR，小字号文本错误率上升。
-- 生僻符号、密集公式编号偶有错乱。
+### 4. 按需加载 references
 
-## 输出交付
+不要默认加载。需要时再打开：
 
-向用户返回：`all_blocks.json` 路径、合并 Markdown 路径、切割图的内联展示（Markdown 图片链接，客户端可直接渲染），并附一句图文配对与漏检情况的诚实评估。
+- 从零安装的详细步骤、CUDA 版本选择 → `references/install.md`
+- 任何报错、异常、性能问题 → `references/troubleshooting.md`
+- 解读 JSON 结构、block label 含义、Markdown 约定 → `references/output-format.md`
+- 想了解本 skill 的实测基线与已知盲区 → `references/case-study.md`
+
+## 硬性纪律
+
+- 脚本和文档都是机器无关的。禁止把任何本机绝对路径写进交付内容或脚本；一切路径以 `detect_env.py` 输出和用户现场为准。
+- OCR 文本永远视为可疑中间产物，切割图才是事实来源（细则在 contract.md，每次任务都适用）。
