@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-pdf_parse.py — PP-StructureV3 文档解析封装
+pdf_parse.py — PP-StructureV3 文档解析封装（argus-doc-reader）
+
 输入 PDF/图片，输出:
   <输出目录>/<文档名>.md          合并后的全文 Markdown（图已在正确位置引用）
   <输出目录>/imgs/                所有裁剪出的图片（文件名含页码与坐标）
-  <输出目录>/pages/page_xxx.json  每页结构化结果（含每个块的坐标与类型，供二次加工）
+  <输出目录>/pages/page_xxx/      每页 Markdown + 完整 JSON（含逐块坐标与类型）
 
 用法:
-  python pdf_parse.py 输入.pdf [-o 输出目录] [--pages 1-5] [--cpu] [--chart]
+  python pdf_parse.py 输入.pdf [-o 输出目录] [--pages 1-5,8] [--device gpu|cpu]
+                               [--chart] [--models-dir 模型缓存目录]
 """
 import argparse
-import json
 import os
 import re
 import shutil
 import sys
 from pathlib import Path
 
-os.environ.setdefault("PADDLE_PDX_CACHE_HOME", r"D:\PaddleOCR\models")
-os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")  # Windows OpenMP 冲突规避
 
 
 def parse_pages(spec: str):
@@ -39,9 +39,13 @@ def main():
     ap.add_argument("input", help="PDF 或图片路径")
     ap.add_argument("-o", "--output", default=None, help="输出目录（默认: 输入文件同目录 <名字>_parsed）")
     ap.add_argument("--pages", default=None, help="只解析指定页，如 1-5,8（默认全部）")
-    ap.add_argument("--cpu", action="store_true", help="强制用 CPU")
+    ap.add_argument("--device", default="gpu", choices=["gpu", "cpu"], help="推理设备（默认 gpu）")
     ap.add_argument("--chart", action="store_true", help="开启图表转表格（PP-Chart2Table，更慢）")
+    ap.add_argument("--models-dir", default=None, help="模型缓存目录（默认 ~/.paddlex，可用 PADDLE_PDX_CACHE_HOME 指定）")
     args = ap.parse_args()
+
+    if args.models_dir:
+        os.environ["PADDLE_PDX_CACHE_HOME"] = str(Path(args.models_dir).resolve())
 
     input_path = Path(args.input).resolve()
     if not input_path.exists():
@@ -56,11 +60,11 @@ def main():
     from paddleocr import PPStructureV3
 
     pipeline = PPStructureV3(
-        device="cpu" if args.cpu else "gpu",
+        device=args.device,
         use_chart_recognition=args.chart,
     )
 
-    print(f"[1/2] 开始解析: {input_path.name} (device={'cpu' if args.cpu else 'gpu'})")
+    print(f"[1/2] 开始解析: {input_path.name} (device={args.device})")
     results = pipeline.predict(str(input_path))
 
     wanted = parse_pages(args.pages) if args.pages else None
@@ -77,7 +81,7 @@ def main():
         res.save_to_json(save_path=str(page_sub))
         res.save_to_markdown(save_path=str(page_sub))
 
-        # 找到该页生成的 md 与 imgs，把图片挪到总 imgs/ 并改写引用路径
+        # 找到该页生成的 md 与 imgs，把图片复制到总 imgs/ 并改写引用路径
         md_files = list(page_sub.glob("*.md"))
         if not md_files:
             continue
