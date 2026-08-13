@@ -1,0 +1,83 @@
+{
+ "source": "Analytical Chemistry 2026, mRNA-LNP AF4-SAXS/MALS paper (13 pages), RTX 4070 Laptop + PP-StructureV3",
+ "pages": [
+  {
+   "page": 3,
+   "note": "本页 figure_title 存在但无 chart/image 块（示意图漏检实例）",
+   "blocks": [
+    {
+     "label": "text",
+     "content": "Vancouver, BC, Canada). Mixture A contained GMP-graded eGFP-mRNA 0.5 mg/mL stock solution diluted with 0.1 M citric acid bufffer $\\mathrm{p H}=5.0$ to a concentration of 0.1 mg/mL. By mixing lipid stocks solutions containing Dlin-MC3-DMA,DOPE, cholesterol, and C16-PEG-2000 and diluting the mixture to a total lipid concentrationof 6.48 mg/mL mixtue B was prepared.By mixing both solution at aflow rateof1:3(3and 9mL/min)using NanossemblrIgite instrument with NxGen cartridges(Precision Nanosystems,Vancouver, BC,Canada) the nanoparticles were formed.",
+     "bbox": [80, 68, 597, 307],
+     "order": 1
+    },
+    {
+     "label": "text",
+     "content": "After formlation th sampe bufr wa chaed  10 M HEPES $\\mathrm{pH}=7.4$ by using Amicon Ultra centrifugal filters from Merck (Darmstadt, Germany) and an Eppendorf (Hamburg,Germany) centrifuge 5804 R.\n",
+     "bbox": [80, 311, 593, 398],
+     "order": 2
+    },
+    {
+     "label": "text",
+     "content": "Both visible light and X-rays, are electromagnetic waves,described by the general formalism (eq 1):",
+     "bbox": [637, 544, 1155, 588],
+     "order": 7
+    },
+    {
+     "label": "formula",
+     "content": "\\vec{E}(x,t)=\\vec{E}_{0}{\\cdot}\\mathbf{e}^{i(-k x+\\omega t)}v ",
+     "bbox": [664, 602, 858, 628],
+     "order": null
+    },
+    {
+     "label": "formula_number",
+     "content": "(1)",
+     "bbox": [1129, 612, 1153, 632],
+     "order": null
+    },
+    {
+     "label": "figure_title",
+     "content": "Figure 1. Geometry of elastic scattering.",
+     "bbox": [637, 1032, 938, 1051],
+     "order": null
+    },
+    {
+     "label": "formula",
+     "content": "q=\\frac{4\\pi\\cdot n_{0}}{\\lambda}\\cdot\\sin\\frac{\\theta}{2}",
+     "bbox": [661, 1205, 806, 1253],
+     "order": null
+    },
+    {
+     "label": "formula_number",
+     "content": "(2)",
+     "bbox": [1128, 1233, 1151, 1254],
+     "order": null
+    }
+   ]
+  },
+  {
+   "page": 7,
+   "note": "chart 与 figure_title 正确配对实例",
+   "blocks": [
+    {
+     "label": "figure_title",
+     "content": "A ",
+     "bbox": [240, 49, 259, 69],
+     "order": null
+    },
+    {
+     "label": "chart",
+     "content": ".\n\n150\nI0-SAXS \n1-90°-MALS \nRg-S phere fit-SAXS \nre la tive In te n s ity 0S S-e -00I 0Rg [nm]\n00\n05101520253035\nt [min]\n\nB C \n1.0e+000\nSphere fit \n\nMALS \n\nSAXS \n\n-2\n      1.0e-02Rg=42.8  4Rg= 48.6\n-6Rg = 39.3\n1.0e-04\n\n-8\n0.010.1100.0020.004\nq[1/nm]q2 [1/nm2]\n",
+     "bbox": [240, 67, 979, 1027],
+     "order": null
+    },
+    {
+     "label": "figure_title",
+     "content": "Figure 2.AF4-SAXS/MALS Analysis of 100 nm Polystyrene (PS100) Beads.150 L of the respective suspension were fractionated using AF4 (for further conditions see Methods and Materials part). (A) AF4 fractogram showing 90light scattering (black) and I() from SAXS Guinier analysis (red).Calculated radi of gyration as a function of elution time are shown in orange,blue,and green.(B) Scatering data for MALS (blue dots) and SAXS (red dots) at the peak maximum (15.1 min elution time) plotted together as a function of the momentum transfer q. The orange line gives the result of a solid sphere $\\mathrm{f i t},$ resulting in the particle size of 110 nm $(R_{g}=42.8nm)$ 1.(C) Guinier plots of the SAXS (red data points) and MALS $R_{g}$ period are given in the Supporting Information Figure S1.\n",
+     "bbox": [60, 1047, 1169, 1194],
+     "order": null
+    }
+   ]
+  }
+ ]
+}
